@@ -3,20 +3,18 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-import requests
 
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# ---------- تنظیمات ----------
+# ---------- تنظیمات از متغیرهای محیطی ----------
 MOTHER_TOKEN = os.environ.get("MOTHER_BOT_TOKEN")
-WEBHOOK_URL = os.environ.get("RENDER_EXTERNAL_URL")  # آدرس رندر مثل https://rea-vj4q.onrender.com
+WEBHOOK_URL = os.environ.get("RENDER_EXTERNAL_URL")
 PORT = int(os.environ.get("PORT", 8443))
 
 if not MOTHER_TOKEN:
     print("ERROR: MOTHER_BOT_TOKEN environment variable not set")
     sys.exit(1)
-
 if not WEBHOOK_URL:
     print("ERROR: RENDER_EXTERNAL_URL environment variable not set")
     sys.exit(1)
@@ -25,8 +23,8 @@ TOKENS_FILE = "tokens.json"
 REACTION_SCRIPT = "reaction_bot.py"
 ACTIVE_PROCESSES = {}
 
-# 👇 شناسه واقعی مالک را اینجا وارد کنید (شناسه خودتان)
-OWNER_ID = 8852010090  # این را به شناسه عددی خودتان تغییر دهید
+# 🔧 شناسه مالک رو اینجا به عدد خودت تغییر بده
+OWNER_ID = 8852010090
 
 # ---------- توابع کمکی ----------
 def load_tokens():
@@ -49,7 +47,7 @@ def start_reaction_bot(token):
         stderr=subprocess.DEVNULL
     )
     ACTIVE_PROCESSES[token] = process
-    print(f"✅ ربات با توکن {token} راه‌اندازی شد (PID: {process.pid})")
+    print(f"✅ ربات ری اکشن زن با توکن {token} راه‌اندازی شد (PID: {process.pid})")
 
 def stop_reaction_bot(token):
     proc = ACTIVE_PROCESSES.get(token)
@@ -69,11 +67,13 @@ def restart_all_bots():
     for token in tokens:
         start_reaction_bot(token)
 
-# ---------- هندلرها ----------
+# ---------- دستورات ربات مادر ----------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id != OWNER_ID:
-        await update.message.reply_text(f"⛔ شما مجاز به استفاده از این ربات نیستید.\nشناسه شما: {user_id}")
+        await update.message.reply_text(
+            f"⛔ شما مجاز به استفاده از این ربات نیستید.\nشناسه شما: {user_id}"
+        )
         return
     await update.message.reply_text(
         "🤖 **ربات مادر ری اکشن زن**\n\n"
@@ -101,7 +101,10 @@ async def add_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tokens.append(token)
     save_tokens(tokens)
     start_reaction_bot(token)
-    await update.message.reply_text(f"✅ ربات ری اکشن زن با موفقیت راه‌اندازی شد!\nتوکن: `{token}`", parse_mode="Markdown")
+    await update.message.reply_text(
+        f"✅ ربات ری اکشن زن با موفقیت راه‌اندازی شد!\nتوکن: `{token}`",
+        parse_mode="Markdown"
+    )
 
 async def stop_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != OWNER_ID:
@@ -117,7 +120,10 @@ async def stop_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if stop_reaction_bot(token):
         tokens.remove(token)
         save_tokens(tokens)
-        await update.message.reply_text(f"🛑 ربات با توکن `{token}` متوقف و از لیست حذف شد.", parse_mode="Markdown")
+        await update.message.reply_text(
+            f"🛑 ربات با توکن `{token}` متوقف و از لیست حذف شد.",
+            parse_mode="Markdown"
+        )
     else:
         await update.message.reply_text("⚠️ ربات مورد نظر در حال اجرا نبود، اما از لیست حذف شد.")
         tokens.remove(token)
@@ -139,9 +145,9 @@ async def list_bots(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != OWNER_ID:
         return
-    await update.message.reply_text("🏓 پونگ! ربات فعال است.")
+    await update.message.reply_text("🏓 پونگ! ربات مادر فعال است و وب‌هوک کار می‌کند.")
 
-# ---------- راه‌اندازی Webhook ----------
+# ---------- راه‌اندازی اصلی ----------
 def main():
     app = Application.builder().token(MOTHER_TOKEN).build()
     
@@ -153,7 +159,7 @@ def main():
     
     restart_all_bots()
     
-    print(f"راه‌اندازی Webhook روی {WEBHOOK_URL}")
+    print(f"🚀 راه‌اندازی وب‌هوک روی آدرس: {WEBHOOK_URL}")
     app.run_webhook(
         listen="0.0.0.0",
         port=PORT,
